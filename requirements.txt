@@ -1,0 +1,9 @@
+soundcard
+numpy
+spotipy
+pydub
+mutagen
+customtkinter
+pywinauto
+Pillow
+python-dotenv
