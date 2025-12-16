@@ -11,9 +11,10 @@ class Dashboard(ctk.CTk):
         self.controller = controller
         
         # Window setup
-        self.title("Spufify Recorder")
-        self.geometry("600x400")
-        self.resizable(False, False)
+        self.title("Spufify")
+        self.geometry("600x630")
+        self.resizable(True, True)
+        self.minsize(500, 500)
         
         # Theme
         ctk.set_appearance_mode("Dark")
@@ -45,25 +46,66 @@ class Dashboard(ctk.CTk):
         self.artist_label = ctk.CTkLabel(self.main_frame, text="", font=("Roboto", 14), text_color="gray")
         self.artist_label.grid(row=2, column=0, pady=0)
         
+        # Duration
+        self.duration_label = ctk.CTkLabel(self.main_frame, text="", font=("Roboto Mono", 11), text_color="gray60")
+        self.duration_label.grid(row=3, column=0, pady=2)
+        
         # Status
         self.status_label = ctk.CTkLabel(self.main_frame, text="STATUS: WAITING", font=("Roboto Mono", 12), text_color="#3B8ED0")
-        self.status_label.grid(row=3, column=0, pady=20)
+        self.status_label.grid(row=4, column=0, pady=10)
+        
+        # Record/Pause Button
+        self.record_btn = ctk.CTkButton(
+            self.main_frame,
+            text="⏺ Start Recording",
+            width=200,
+            height=35,
+            font=("Roboto Medium", 13),
+            command=self.toggle_recording
+        )
+        self.record_btn.grid(row=5, column=0, pady=10)
         
         # --- Footer ---
-        self.footer_frame = ctk.CTkFrame(self, height=40, corner_radius=0)
+        self.footer_frame = ctk.CTkFrame(self, height=60, corner_radius=0)
         self.footer_frame.grid(row=2, column=0, sticky="ew")
         
-        self.rec_indicator = ctk.CTkProgressBar(self.footer_frame, orientation="horizontal") 
-        self.rec_indicator.pack(fill="x", padx=0, pady=0)
-        self.rec_indicator.set(0) # Logic to pulse this if recording?
+        # Progress Bar
+        self.progress_bar = ctk.CTkProgressBar(self.footer_frame, orientation="horizontal", height=8)
+        self.progress_bar.pack(fill="x", padx=20, pady=(10, 5))
+        self.progress_bar.set(0)
+        
+        # Time Label
+        self.time_label = ctk.CTkLabel(
+            self.footer_frame,
+            text="0:00 / 0:00",
+            font=("Roboto Mono", 11),
+            text_color="gray70"
+        )
+        self.time_label.pack(pady=(0, 5))
         
         # Settings Button
-        self.settings_btn = ctk.CTkButton(self.footer_frame, text="⚙️ Settings", width=80, command=self.open_settings)
+        self.settings_btn = ctk.CTkButton(self.footer_frame, text="⚙️", width=40, command=self.open_settings)
         self.settings_btn.pack(side="right", padx=10, pady=5)
         
         self.current_cover_url = None
         self.settings_window = None
         self.start_controller()
+    
+    def toggle_recording(self):
+        """Toggle manual recording pause/resume"""
+        if self.controller.user_paused:
+            self.controller.manual_resume()
+        else:
+            self.controller.manual_pause()
+    
+    def _format_time(self, ms):
+        """Convert milliseconds to M:SS format"""
+        if not ms:
+            return "0:00"
+        seconds = ms // 1000
+        minutes = seconds // 60
+        seconds = seconds % 60
+        return f"{minutes}:{seconds:02d}"
 
     def open_settings(self):
         if self.settings_window is None or not self.settings_window.winfo_exists():
@@ -87,30 +129,67 @@ class Dashboard(ctk.CTk):
         state = status['state']
         track = status['track']
         
-        self.status_label.configure(text=f"STATUS: {state}")
+        # Enhanced status text with format info
+        from spufify.config import Config
+        status_text = f"STATUS: {state}"
+        if state == "RECORDING" and track:
+            status_text += f" • {Config.OUTPUT_FORMAT.upper()}"
+        elif state == "PAUSED" and track and track.get('is_ad'):
+            status_text += " • Ad detected"
+        
+        self.status_label.configure(text=status_text)
+        
+        # Update button text based on state
+        if self.controller.user_paused:
+            self.record_btn.configure(text="⏺ Resume Recording")
+        else:
+            self.record_btn.configure(text="⏸ Pause Recording")
         
         if state == "RECORDING":
             self.status_label.configure(text_color="#2CC985") # Green
-            self.rec_indicator.configure(progress_color="#2CC985")
-            self.rec_indicator.set(1.0) # Full bar or pulsing
+            self.progress_bar.configure(progress_color="#2CC985")
         elif state == "PAUSED":
             self.status_label.configure(text_color="#E0A82E") # Yellow
-            self.rec_indicator.configure(progress_color="#E0A82E")
-            self.rec_indicator.set(0.0)
+            self.progress_bar.configure(progress_color="#E0A82E")
         else:
             self.status_label.configure(text_color="#3B8ED0") # Blue
-            self.rec_indicator.set(0.0)
+            self.progress_bar.configure(progress_color="#3B8ED0")
             
         if track:
             self.title_label.configure(text=track['title'])
             self.artist_label.configure(text=track['artist'])
+            
+            # Duration display
+            if track.get('duration_ms'):
+                duration_str = self._format_time(track['duration_ms'])
+                self.duration_label.configure(text=f"Duration: {duration_str}")
+                
+                # Progress bar and time display
+                progress_ms = track.get('progress_ms', 0)
+                duration_ms = track['duration_ms']
+                
+                if duration_ms > 0:
+                    progress_fraction = progress_ms / duration_ms
+                    self.progress_bar.set(progress_fraction)
+                    
+                    current_time = self._format_time(progress_ms)
+                    total_time = self._format_time(duration_ms)
+                    self.time_label.configure(text=f"{current_time} / {total_time}")
+            else:
+                self.duration_label.configure(text="")
+                self.progress_bar.set(0)
+                self.time_label.configure(text="0:00 / 0:00")
             
             # Cover Art
             if track.get('cover_url') != self.current_cover_url:
                 self.current_cover_url = track['cover_url']
                 self._load_image(self.current_cover_url)
         else:
-             self.title_label.configure(text="Paused / Not Playing")
+            self.title_label.configure(text="Waiting for Spotify...")
+            self.artist_label.configure(text="")
+            self.duration_label.configure(text="")
+            self.progress_bar.set(0)
+            self.time_label.configure(text="0:00 / 0:00")
 
     def _load_image(self, url):
         def _fetch():

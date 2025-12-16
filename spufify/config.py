@@ -15,7 +15,7 @@ class Config:
     # Using 44100Hz causes resampling artifacts or robotic sound on loopback.
     SAMPLE_RATE = 48000  # Changed to 48000 to match Windows WASAPI native rate
     CHANNELS = 2
-    BLOCK_SIZE = 2048  # Increased from 512 to reduce audio glitches
+    BLOCK_SIZE = 1  # Small block for low latency (larger values cause distortion)
     
     # Output Format (mp3, flac, wav)
     OUTPUT_FORMAT = "flac"

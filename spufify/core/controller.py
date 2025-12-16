@@ -25,6 +25,7 @@ class Controller:
         self.last_poll_time = 0
         self.running = False
         self.thread = None
+        self.user_paused = False  # Manual override flag
 
     def start(self):
         self.running = True
@@ -40,6 +41,18 @@ class Controller:
             if self.thread.is_alive():
                 logger.warning("Controller thread did not stop cleanly")
         logger.info("Controller stopped.")
+    
+    def manual_pause(self):
+        """User-initiated pause - prevents auto-resume"""
+        self.user_paused = True
+        self._set_state("PAUSED")
+        logger.info("User manually paused recording")
+    
+    def manual_resume(self):
+        """User-initiated resume - re-enables auto-tracking"""
+        self.user_paused = False
+        logger.info("User manually resumed recording")
+        # Will auto-resume on next tick if track is playing
 
     def _ev_loop(self):
         while self.running:
@@ -105,6 +118,10 @@ class Controller:
             self._set_state("PAUSED")
 
     def _handle_playing_track(self, track_info):
+        # If user manually paused, don't auto-resume
+        if self.user_paused:
+            return
+        
         # If we were waiting or paused, start recording
         if self.state in ["WAITING", "PAUSED"]:
             self.current_track = track_info

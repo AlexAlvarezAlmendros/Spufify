@@ -6,8 +6,12 @@ import queue
 import soundfile as sf
 import os
 import logging
+import warnings
 from spufify.config import Config
 from spufify.core.processor import Processor
+
+# Suppress soundcard discontinuity warnings (cosmetic, doesn't affect recording quality)
+warnings.filterwarnings('ignore', category=sc.SoundcardRuntimeWarning, message='data discontinuity in recording')
 
 logger = logging.getLogger(__name__)
 

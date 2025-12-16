@@ -47,12 +47,46 @@ Open **⚙️ Settings** in Spufify and verify:
    ```
 5. Run: `run.bat`
 
+## ⚙️ Required System Configuration
+
+### Windows Sound Settings
+**Important**: Configure your audio device correctly to avoid quality issues:
+
+1. **Open Sound Control Panel**:
+   - Right-click speaker icon in taskbar → "Sound settings" → "More sound settings"
+   - Or: `Control Panel → Hardware and Sound → Sound`
+
+2. **Select your playback device** (Speakers/Headphones) → **Properties**
+
+3. **Advanced Tab**:
+   - ❌ **Uncheck "Enable audio enhancements"** (may cause distortion)
+   - ❌ **Uncheck "Allow applications to take exclusive control"** (prevents Spufify from capturing audio)
+
+4. **Set Volume to 100%**:
+   - Windows system volume: **100%**
+   - Spotify volume slider: **100%**
+   - **Tip**: If you don't want to hear the music while recording, **plug in headphones** without wearing them
+
+### Spotify Settings
+**Disable audio transitions** to ensure clean track boundaries:
+
+1. Open **Spotify → Settings**
+2. **Audio Quality**:
+   - Set to **Very High** (for best source quality)
+3. **Playback**:
+   - ❌ **Disable "Crossfade"** (crossfade songs)
+   - ❌ **Disable "Automix"** (seamless transitions between songs)
+   - ❌ **Disable "Gapless playback"** (if available)
+
+**Why?** These features blend songs together, making it impossible to detect track boundaries accurately.
+
 ## Usage
 
-1. Launch Spufify
+1. Launch Spufify with `run.bat`
 2. Open Spotify and play music
 3. Spufify automatically detects and records each track
-4. Files are saved to `~/Music/Spufify/` with metadata and artwork
+4. Use **⏸ Pause Recording** button to stop recording while listening
+5. Files are saved to `~/Music/Spufify/` with metadata and artwork
 
 ## License
 
