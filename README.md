@@ -120,4 +120,4 @@ See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for creating the standalone i
 
 ## License
 
-MIT
+Apache 2.0
