@@ -57,8 +57,20 @@ class Dashboard(ctk.CTk):
         self.rec_indicator.pack(fill="x", padx=0, pady=0)
         self.rec_indicator.set(0) # Logic to pulse this if recording?
         
+        # Settings Button
+        self.settings_btn = ctk.CTkButton(self.footer_frame, text="⚙️ Settings", width=80, command=self.open_settings)
+        self.settings_btn.pack(side="right", padx=10, pady=5)
+        
         self.current_cover_url = None
+        self.settings_window = None
         self.start_controller()
+
+    def open_settings(self):
+        if self.settings_window is None or not self.settings_window.winfo_exists():
+            from spufify.ui.settings import SettingsWindow # Lazy import to avoid circular dep
+            self.settings_window = SettingsWindow(self)
+        else:
+            self.settings_window.focus()
 
     def start_controller(self):
         # Pass callback to controller

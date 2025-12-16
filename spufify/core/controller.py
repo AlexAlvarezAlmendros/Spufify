@@ -1,8 +1,11 @@
 import time
 import threading
+import logging
 from spufify.api.spotify import SpotifyClient
 from spufify.config import Config
 # from spufify.core.recorder import Recorder # formatting circular dependency, will handle with signals or injection
+
+logger = logging.getLogger(__name__)
 
 class Controller:
     """
@@ -27,13 +30,16 @@ class Controller:
         self.running = True
         self.thread = threading.Thread(target=self._ev_loop, daemon=True)
         self.thread.start()
-        print("Controller: Started background loop.")
+        logger.info("Controller started, polling Spotify API every 1 second.")
 
     def stop(self):
+        logger.info("Stopping controller...")
         self.running = False
-        if self.thread:
-            self.thread.join()
-        print("Controller: Stopped.")
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=2.0)
+            if self.thread.is_alive():
+                logger.warning("Controller thread did not stop cleanly")
+        logger.info("Controller stopped.")
 
     def _ev_loop(self):
         while self.running:
@@ -50,7 +56,10 @@ class Controller:
                     'state': self.state,
                     'track': track_info
                 }
-                self.ui_callback(status_pkg)
+                try:
+                    self.ui_callback(status_pkg)
+                except Exception as e:
+                    logger.error(f"Error in UI callback: {e}")
 
             if not track_info:
                 self._handle_no_music()
@@ -64,21 +73,24 @@ class Controller:
                 self._handle_playing_track(track_info)
 
         except Exception as e:
-            print(f"Controller Loop Error: {e}")
+            logger.error(f"Controller tick error: {e}", exc_info=True)
 
     def _set_state(self, new_state):
         if self.state != new_state:
-            print(f"[Controller] State Change: {self.state} -> {new_state}")
+            logger.info(f"State Change: {self.state} -> {new_state}")
             self.state = new_state
             
             # Notify Recorder
             if self.recorder:
-                if new_state == "RECORDING":
-                    self.recorder.resume_recording()
-                elif new_state == "PAUSED":
-                    self.recorder.pause_recording()
-                elif new_state == "WAITING":
-                    self.recorder.stop_recording()
+                try:
+                    if new_state == "RECORDING":
+                        self.recorder.resume_recording()
+                    elif new_state == "PAUSED":
+                        self.recorder.pause_recording()
+                    elif new_state == "WAITING":
+                        self.recorder.stop_recording()
+                except Exception as e:
+                    logger.error(f"Error notifying recorder of state change: {e}")
 
     def _handle_no_music(self):
         if self.state != "WAITING":
@@ -106,13 +118,21 @@ class Controller:
         # If currently recording, check if track changed
         elif self.state == "RECORDING":
             if self.current_track and track_info['track_id'] != self.current_track['track_id']:
-                print(f"[Controller] Track Changed: {self.current_track['title']} -> {track_info['title']}")
+                logger.info(f"Track Changed: {self.current_track['title']} -> {track_info['title']}")
                 # Finish previous
                 if self.recorder:
-                    self.recorder.finish_track() # Saves the file
+                    try:
+                        logger.debug("Calling recorder.finish_track()...")
+                        self.recorder.finish_track() # Saves the file
+                        logger.debug("finish_track() completed")
+                    except Exception as e:
+                        logger.error(f"Error finishing track: {e}", exc_info=True)
                 
                 # Start new
                 self.current_track = track_info
                 if self.recorder:
                     self.recorder.set_current_metadata(track_info)
                     self.recorder.resume_recording() # Ensure we are recording
+            else:
+                # Same track still playing - this is normal
+                pass
