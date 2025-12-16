@@ -83,12 +83,17 @@ class Dashboard(ctk.CTk):
         )
         self.time_label.pack(pady=(0, 5))
         
-        # Settings Button
+        # Info Button (left side)
+        self.info_btn = ctk.CTkButton(self.footer_frame, text="Info", width=10, command=self.open_info)
+        self.info_btn.pack(side="left", padx=5, pady=5)
+        
+        # Settings Button (right side)
         self.settings_btn = ctk.CTkButton(self.footer_frame, text="⚙️", width=40, command=self.open_settings)
         self.settings_btn.pack(side="right", padx=10, pady=5)
         
         self.current_cover_url = None
         self.settings_window = None
+        self.info_window = None
         self.start_controller()
     
     def toggle_recording(self):
@@ -113,6 +118,13 @@ class Dashboard(ctk.CTk):
             self.settings_window = SettingsWindow(self)
         else:
             self.settings_window.focus()
+    
+    def open_info(self):
+        if self.info_window is None or not self.info_window.winfo_exists():
+            from spufify.ui.info import InfoWindow # Lazy import to avoid circular dep
+            self.info_window = InfoWindow(self)
+        else:
+            self.info_window.focus()
 
     def start_controller(self):
         # Pass callback to controller
