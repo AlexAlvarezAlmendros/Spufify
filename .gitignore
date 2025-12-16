@@ -30,7 +30,8 @@ MANIFEST
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
-*.spec
+# Keep spufify.spec for building installer
+# *.spec
 
 # Installer logs
 pip-log.txt
@@ -211,3 +212,22 @@ __marimo__/
 .github/instructions/documentacion-tecnica.instructions.md
 .github/copilot-instructions.md
 CHANGELOG.md
+
+# Spufify specific
+.env
+.spotify_cache
+.spufify_settings.json
+
+# FFmpeg binaries (users must download separately)
+ffmpeg/ffmpeg.exe
+ffmpeg/ffprobe.exe
+ffmpeg/*.dll
+
+# PyInstaller build artifacts
+build/
+dist/Spufify/
+dist/installer/*.exe
+
+# Inno Setup temp files
+Output/
+*.~is

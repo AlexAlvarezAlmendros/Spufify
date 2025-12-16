@@ -30,22 +30,46 @@ Open **⚙️ Settings** in Spufify and verify:
 
 ## Installation
 
-### Prerequisites
+### Option A: Installer (Recommended for End Users)
+
+Download the latest installer from [Releases](https://github.com/AlexAlvarezAlmendros/Spufify/releases):
+- `Spufify-Setup-1.0.0.exe` (includes everything: Python, FFmpeg, dependencies)
+
+The installer will:
+1. ✅ Install Spufify to Program Files
+2. ✅ Bundle FFmpeg (no separate download needed)
+3. ✅ Ask for your Spotify API credentials
+4. ✅ Create shortcuts on Desktop and Start Menu
+
+**First-time setup**: You'll need Spotify Developer credentials:
+1. Go to https://developer.spotify.com/dashboard
+2. Create a new app
+3. Set Redirect URI to: `http://127.0.0.1:8888/callback`
+4. Enter your Client ID and Secret during installation
+
+### Option B: Development Setup
+
+For developers who want to modify the code:
+
+#### Prerequisites
 - Windows 10/11
 - Python 3.8+
-- FFmpeg (must be in PATH)
+- FFmpeg (must be in PATH) - [Download here](https://github.com/BtbN/FFmpeg-Builds/releases)
 - Spotify Developer App credentials
 
-### Setup
+#### Setup
 1. Clone repository
 2. Create virtual environment: `python -m venv venv`
 3. Install dependencies: `venv\Scripts\pip install -r requirements.txt`
-4. Create `.env` file with Spotify credentials:
+4. Copy `.env.example` to `.env` and add your Spotify credentials:
    ```
    SPOTIPY_CLIENT_ID=your_client_id
    SPOTIPY_CLIENT_SECRET=your_client_secret
    ```
 5. Run: `run.bat`
+
+#### Building Installer
+See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for creating the standalone installer.
 
 ## ⚙️ Required System Configuration
 
