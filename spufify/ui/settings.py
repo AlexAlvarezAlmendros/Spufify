@@ -65,6 +65,27 @@ class SettingsWindow(ctk.CTkToplevel):
         self.silence_entry = ctk.CTkEntry(self.scroll)
         self.silence_entry.pack(anchor="w", pady=5)
         
+        # --- Spotify Authentication ---
+        ctk.CTkLabel(self.scroll, text="Spotify Authentication", font=("Arial", 14, "bold")).pack(anchor="w", pady=(15, 0))
+        
+        # Status label
+        self.auth_status_label = ctk.CTkLabel(self.scroll, text="Checking status...", text_color="gray")
+        self.auth_status_label.pack(anchor="w", pady=5)
+        
+        # Auth buttons frame
+        auth_btn_frame = ctk.CTkFrame(self.scroll)
+        auth_btn_frame.pack(fill="x", pady=5)
+        
+        self.auth_btn = ctk.CTkButton(auth_btn_frame, text="Authenticate with Spotify", command=self._authenticate_spotify)
+        self.auth_btn.pack(side="left", padx=(0, 5))
+        
+        self.check_auth_btn = ctk.CTkButton(auth_btn_frame, text="Check Status", command=self._check_auth_status, width=120)
+        self.check_auth_btn.pack(side="left")
+        
+        # Info label
+        info_text = "ℹ️ Required to detect tracks. Opens browser for OAuth."
+        ctk.CTkLabel(self.scroll, text=info_text, text_color="gray", font=("Arial", 10)).pack(anchor="w", pady=(0, 5))
+        
         # --- Paths ---
         ctk.CTkLabel(self.scroll, text="Storage", font=("Arial", 14, "bold")).pack(anchor="w", pady=(15, 0))
         
@@ -118,7 +139,57 @@ class SettingsWindow(ctk.CTkToplevel):
                     self.device_combo.set(self.device_names[0] if self.device_names else "")
             except:
                 pass
+        
+        # Check Spotify authentication status
+        self._check_auth_status()
 
+    def _check_auth_status(self):
+        """Check if Spotify is authenticated"""
+        try:
+            if hasattr(self.parent, 'controller') and self.parent.controller:
+                spotify_client = self.parent.controller.spotify_client
+                if spotify_client and spotify_client.is_authenticated():
+                    self.auth_status_label.configure(text="✅ Authenticated", text_color="green")
+                    self.auth_btn.configure(text="Re-authenticate")
+                else:
+                    self.auth_status_label.configure(text="❌ Not authenticated", text_color="red")
+                    self.auth_btn.configure(text="Authenticate with Spotify")
+            else:
+                self.auth_status_label.configure(text="⚠️ Controller not ready", text_color="orange")
+        except Exception as e:
+            self.auth_status_label.configure(text=f"❌ Error: {str(e)}", text_color="red")
+    
+    def _authenticate_spotify(self):
+        """Trigger Spotify authentication"""
+        import threading
+        
+        def auth_thread():
+            try:
+                self.after(0, lambda: self.auth_status_label.configure(text="🔄 Opening browser...", text_color="blue"))
+                self.after(0, lambda: self.auth_btn.configure(state="disabled"))
+                
+                if hasattr(self.parent, 'controller') and self.parent.controller:
+                    spotify_client = self.parent.controller.spotify_client
+                    if spotify_client:
+                        success = spotify_client.authenticate()
+                        if success:
+                            self.after(0, lambda: self.auth_status_label.configure(text="✅ Authentication successful!", text_color="green"))
+                            self.after(0, lambda: self.auth_btn.configure(text="Re-authenticate", state="normal"))
+                        else:
+                            self.after(0, lambda: self.auth_status_label.configure(text="❌ Authentication failed", text_color="red"))
+                            self.after(0, lambda: self.auth_btn.configure(state="normal"))
+                    else:
+                        self.after(0, lambda: self.auth_status_label.configure(text="❌ Spotify client not initialized", text_color="red"))
+                        self.after(0, lambda: self.auth_btn.configure(state="normal"))
+                else:
+                    self.after(0, lambda: self.auth_status_label.configure(text="❌ Controller not available", text_color="red"))
+                    self.after(0, lambda: self.auth_btn.configure(state="normal"))
+            except Exception as e:
+                self.after(0, lambda: self.auth_status_label.configure(text=f"❌ Error: {str(e)[:50]}", text_color="red"))
+                self.after(0, lambda: self.auth_btn.configure(state="normal"))
+        
+        threading.Thread(target=auth_thread, daemon=True).start()
+    
     def _save(self):
         try:
             # Update Config

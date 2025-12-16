@@ -216,6 +216,8 @@ CHANGELOG.md
 # Spufify specific
 .env
 .spotify_cache
+.spotify_token_cache
+*/.spotify_token_cache
 .spufify_settings.json
 
 # FFmpeg binaries (users must download separately)

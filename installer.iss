@@ -2,7 +2,7 @@
 ; Requires: Inno Setup 6.0+ (https://jrsoftware.org/isinfo.php)
 
 #define MyAppName "Spufify"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "Alex Alvarez Almendros"
 #define MyAppURL "https://github.com/AlexAlvarezAlmendros/Spufify"
 #define MyAppExeName "Spufify.exe"
@@ -90,6 +90,7 @@ begin
     'Enter your Spotify Developer credentials',
     'To use Spufify, you need to create a Spotify Developer App at https://developer.spotify.com/dashboard' + #13#10 +
     'Set the Redirect URI to: http://127.0.0.1:8888/callback' + #13#10#13#10 +
+    'IMPORTANT: After installation, open Spufify and go to Settings -> Spotify Authentication to complete setup.' + #13#10 +
     'You can skip this step and configure later by editing the .env file in the installation folder.');
 
   SpotifyConfigPage.Add('Client ID:', False);

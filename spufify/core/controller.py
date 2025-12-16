@@ -16,7 +16,7 @@ class Controller:
     STATES = ["WAITING", "RECORDING", "PAUSED", "PROCESSING"]
 
     def __init__(self, recorder_ref=None, ui_callback_ref=None):
-        self.spotify = SpotifyClient()
+        self.spotify_client = SpotifyClient(auto_authenticate=False)  # Don't auto-auth on startup
         self.recorder = recorder_ref
         self.ui_callback = ui_callback_ref
         
@@ -61,7 +61,7 @@ class Controller:
             
     def tick(self):
         try:
-            track_info = self.spotify.get_current_track()
+            track_info = self.spotify_client.get_current_track()
             
             # Send info to UI if callback exists
             if self.ui_callback:

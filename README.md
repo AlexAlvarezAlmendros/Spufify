@@ -46,6 +46,7 @@ The installer will:
 2. Create a new app
 3. Set Redirect URI to: `http://127.0.0.1:8888/callback`
 4. Enter your Client ID and Secret during installation
+5. After installation, open Spufify and go to **⚙️ Settings → Spotify Authentication** to authenticate
 
 ### Option B: Development Setup
 
@@ -67,6 +68,7 @@ For developers who want to modify the code:
    SPOTIPY_CLIENT_SECRET=your_client_secret
    ```
 5. Run: `run.bat`
+6. Open **⚙️ Settings → Spotify Authentication** and click "Authenticate with Spotify"
 
 #### Building Installer
 See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for creating the standalone installer.
@@ -105,11 +107,15 @@ See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for creating the standalone i
 **Why?** These features blend songs together, making it impossible to detect track boundaries accurately.
 
 ## Usage
-
-1. Launch Spufify with `run.bat`
-2. Open Spotify and play music
-3. Spufify automatically detects and records each track
-4. Use **⏸ Pause Recording** button to stop recording while listening
+ (or from the installed shortcut)
+2. **First time**: Go to **⚙️ Settings → Spotify Authentication** and click "Authenticate with Spotify"
+   - This opens your browser for OAuth authorization
+   - Grant permissions and return to the app
+   - Status indicator in header shows "✅ Spotify OK" when authenticated
+3. Open Spotify and play music
+4. Spufify automatically detects and records each track
+5. Use **⏸ Pause Recording** button to stop recording while listening
+6. Use **⏸ Pause Recording** button to stop recording while listening
 5. Files are saved to `~/Music/Spufify/` with metadata and artwork
 
 ## License

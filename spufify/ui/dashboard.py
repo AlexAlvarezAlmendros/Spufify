@@ -34,6 +34,15 @@ class Dashboard(ctk.CTk):
         self.logo_label = ctk.CTkLabel(self.header_frame, text="Spufify", font=("Roboto Medium", 20))
         self.logo_label.pack(side="left", padx=20, pady=10)
         
+        # Spotify Auth Status Indicator
+        self.auth_status_indicator = ctk.CTkLabel(
+            self.header_frame, 
+            text="⚠️ Not authenticated", 
+            font=("Roboto", 10),
+            text_color="orange"
+        )
+        self.auth_status_indicator.pack(side="right", padx=20, pady=10)
+        
         # --- Main Content ---
         self.main_frame = ctk.CTkFrame(self, corner_radius=10)
         self.main_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=20)
@@ -99,6 +108,10 @@ class Dashboard(ctk.CTk):
         self.settings_window = None
         self.info_window = None
         self.start_controller()
+        
+        # Check auth status periodically
+        self._check_spotify_auth()
+        self.after(5000, self._periodic_auth_check)  # Check every 5 seconds
     
     def toggle_recording(self):
         """Toggle manual recording pause/resume"""
@@ -130,6 +143,24 @@ class Dashboard(ctk.CTk):
         else:
             self.info_window.focus()
 
+    
+    def _check_spotify_auth(self):
+        """Check Spotify authentication status and update indicator"""
+        try:
+            if self.controller and self.controller.spotify_client:
+                if self.controller.spotify_client.is_authenticated():
+                    self.auth_status_indicator.configure(text="✅ Spotify OK", text_color="green")
+                else:
+                    self.auth_status_indicator.configure(text="⚠️ Not authenticated", text_color="orange")
+            else:
+                self.auth_status_indicator.configure(text="❌ No client", text_color="red")
+        except Exception as e:
+            self.auth_status_indicator.configure(text="❌ Error", text_color="red")
+    
+    def _periodic_auth_check(self):
+        """Periodically check auth status"""
+        self._check_spotify_auth()
+        self.after(5000, self._periodic_auth_check)  # Check every 5 seconds
     def start_controller(self):
         # Pass callback to controller
         self.controller.ui_callback = self.update_ui
