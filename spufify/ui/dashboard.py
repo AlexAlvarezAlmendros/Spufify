@@ -3,6 +3,7 @@ from PIL import Image, ImageTk
 import requests
 from io import BytesIO
 import threading
+import os
 
 class Dashboard(ctk.CTk):
     def __init__(self, controller):
@@ -15,6 +16,9 @@ class Dashboard(ctk.CTk):
         self.geometry("600x630")
         self.resizable(True, True)
         self.minsize(500, 500)
+        
+        # Set application icon
+        self._set_icon()
         
         # Theme
         ctk.set_appearance_mode("Dark")
@@ -218,6 +222,52 @@ class Dashboard(ctk.CTk):
                 print(f"Error loading image: {e}")
         
         threading.Thread(target=_fetch, daemon=True).start()
+    
+    def _set_icon(self):
+        """Set window and taskbar icon"""
+        try:
+            # Get path to icon file (assets/icon.ico)
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            icon_path = os.path.join(base_dir, 'assets', 'icon.ico')
+            
+            if os.path.exists(icon_path):
+                # Set window icon for title bar
+                self.iconbitmap(icon_path)
+                
+                # Force Windows taskbar icon update using ctypes
+                try:
+                    import ctypes
+                    import sys
+                    
+                    # Set AppUserModelID to ensure proper taskbar icon
+                    myappid = 'spufify.recorder.app.1.0'
+                    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+                    
+                    # Load and set icon for taskbar using Windows API
+                    if sys.platform == 'win32':
+                        # Get window handle
+                        hwnd = ctypes.windll.user32.GetParent(self.winfo_id())
+                        
+                        # Load icon
+                        icon_flags = 0x00000000  # LR_DEFAULTSIZE
+                        hicon = ctypes.windll.user32.LoadImageW(
+                            0,
+                            icon_path,
+                            1,  # IMAGE_ICON
+                            0, 0,
+                            0x00000010 | icon_flags  # LR_LOADFROMFILE
+                        )
+                        
+                        if hicon:
+                            # Set both small and large icons
+                            ctypes.windll.user32.SendMessageW(hwnd, 0x0080, 0, hicon)  # WM_SETICON, ICON_SMALL
+                            ctypes.windll.user32.SendMessageW(hwnd, 0x0080, 1, hicon)  # WM_SETICON, ICON_LARGE
+                except Exception as icon_err:
+                    print(f"Note: Could not set taskbar icon via ctypes: {icon_err}")
+            else:
+                print(f"Warning: Icon file not found at {icon_path}")
+        except Exception as e:
+            print(f"Error setting icon: {e}")
 
     def on_closing(self):
         self.controller.stop()
